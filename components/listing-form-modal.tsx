@@ -81,7 +81,35 @@ export default function ListingFormModal({
         phone_number: formData.phoneNumber,
       };
 
-      await api.post("/rent-listings/", payload);
+      // Post to backend API
+      const response = await api.post("/rent-listings/", payload);
+      const createdListing = response.data;
+
+      // Post to Telegram channel (non-blocking)
+      try {
+        const telegramPayload = {
+          ...payload,
+          id: createdListing.id || createdListing.data?.id,
+        };
+
+        const telegramResponse = await fetch("/api/telegram/post-listing", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(telegramPayload),
+        });
+
+        const telegramResult = await telegramResponse.json();
+
+        if (!telegramResult.success && !telegramResult.skipped) {
+          console.warn("Failed to post to Telegram:", telegramResult.error);
+          // Don't fail the entire operation, just log the warning
+        }
+      } catch (telegramError) {
+        console.error("Error posting to Telegram:", telegramError);
+        // Continue even if Telegram posting fails
+      }
 
       onSuccess();
     } catch (err: any) {

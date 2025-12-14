@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/auth-context";
+import { TelegramProvider } from "@/lib/telegram-provider";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -38,8 +39,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <script
+          src="https://telegram.org/js/telegram-web-app.js"
+          async
+        />
+      </head>
       <body className={`font-sans antialiased`}>
-        <AuthProvider>{children}</AuthProvider>
+        <TelegramProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </TelegramProvider>
       </body>
     </html>
   );
