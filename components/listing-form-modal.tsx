@@ -87,9 +87,13 @@ export default function ListingFormModal({
 
       // Post to Telegram channel (non-blocking)
       try {
+        // Use response data to get processed photo URLs
+        const responseData = createdListing.data || createdListing;
         const telegramPayload = {
           ...payload,
-          id: createdListing.id || createdListing.data?.id,
+          id: responseData.id,
+          // Use backend URLs if available (required for Telegram), fallback to payload
+          photos: responseData.photos || payload.photos,
         };
 
         const telegramResponse = await fetch("/api/telegram/post-listing", {
