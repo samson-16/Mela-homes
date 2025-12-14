@@ -1,0 +1,294 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Plus, User, LogOut } from "lucide-react";
+import { FaUserCircle } from "react-icons/fa";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/lib/auth-context";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import ListingCard from "./listing-card";
+import ListingFormModal from "./listing-form-modal";
+import AuthModal from "./auth-modal";
+import Footer from "./footer";
+import { ListingSkeletonGrid } from "./listing-skeleton";
+import api from "@/lib/axios";
+
+interface Listing {
+  id: string | number;
+  title: string;
+  image: string;
+  price: number;
+  currency: string;
+  bedrooms: number;
+  bathrooms: number;
+  location: string;
+  propertyType: string;
+}
+
+interface BackendListing {
+  id: number;
+  property_type: string;
+  property_type_other: string | null;
+  description: string;
+  location: string;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+  photos: string[];
+  monthly_rent: string;
+  currency: string;
+  initial_deposit: string | null;
+  negotiable: boolean;
+  phone_number: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+}
+
+// const MOCK_LISTINGS: Listing[] = [
+//   {
+//     id: "1",
+//     title: "Modern 3-Bedroom Apartment",
+//     image: "https://placehold.co/600x400/3b82f6/ffffff?text=3BR+Apartment",
+//     price: 1500,
+//     currency: "ETB",
+//     bedrooms: 3,
+//     bathrooms: 2,
+//     location: "Addis Ababa, Bole",
+//     propertyType: "Apartment",
+//   },
+//   {
+//     id: "2",
+//     title: "Spacious Family House",
+//     image: "https://placehold.co/600x400/10b981/ffffff?text=4BR+House",
+//     price: 3000,
+//     currency: "ETB",
+//     bedrooms: 4,
+//     bathrooms: 3,
+//     location: "Addis Ababa, Kazanchis",
+//     propertyType: "House",
+//   },
+//   {
+//     id: "3",
+//     title: "Cozy Studio Apartment",
+//     image: "https://placehold.co/600x400/8b5cf6/ffffff?text=Studio",
+//     price: 800,
+//     currency: "ETB",
+//     bedrooms: 1,
+//     bathrooms: 1,
+//     location: "Addis Ababa, Piazza",
+//     propertyType: "Apartment",
+//   },
+// ];
+
+const transformBackendListing = (backendListing: BackendListing): Listing => {
+  return {
+    id: backendListing.id,
+    title:
+      backendListing.description ||
+      `${backendListing.property_type} in ${backendListing.location}`,
+    image:
+    backendListing.photos[0],
+    price: Number.parseInt(backendListing.monthly_rent),
+    currency: backendListing.currency,
+    bedrooms: backendListing.bedrooms,
+    bathrooms: backendListing.bathrooms,
+    location: backendListing.location,
+    propertyType:
+      backendListing.property_type_other || backendListing.property_type,
+  };
+};
+
+export default function ListingsPage() {
+  const router = useRouter();
+  const { user, token, logout } = useAuth();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchListings();
+  }, []);
+
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await api.get("/rent-listings/");
+      const data = response.data;
+      console.log("[v0] Backend response:", data);
+
+      const listings_array = Array.isArray(data)
+        ? data
+        : data.results || data.data || [];
+
+      const transformedListings = listings_array
+        .map((item: BackendListing) => transformBackendListing(item))
+        .filter((listing: Listing) => listing.bedrooms > 0);
+
+      setListings(transformedListings);
+      setFilteredListings(transformedListings);
+      console.log(
+        "[v0] Successfully fetched and transformed listings:",
+        transformedListings.length
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+      console.error("[v0] Failed to fetch listings:", errorMessage);
+
+        setError("Could not load live listings. Showing demo data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    const filtered = listings.filter(
+      (listing) =>
+        listing.title.toLowerCase().includes(value.toLowerCase()) ||
+        listing.location.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredListings(filtered);
+  };
+
+  const handleListingCreated = () => {
+    setShowFormModal(false);
+    fetchListings();
+  };
+
+  const handlePostClick = () => {
+    if (!token) {
+      setShowAuthModal(true);
+      return;
+    }
+    setShowFormModal(true);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-40 bg-white border-b border-border shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-foreground">
+            Rental Listings
+          </h1>
+          <div className="flex items-center gap-4">
+            {!token ? (
+              <Button onClick={() => setShowAuthModal(true)}>Login</Button>
+            ) : (
+              <>
+                <Button
+                  onClick={handlePostClick}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Post a Listing
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      className="relative h-12 w-12 rounded-full"
+                    >
+                      <FaUserCircle className="h-8 w-8" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user?.username || "User"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user?.email || ""}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Go to Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {error && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-amber-800 text-sm">{error}</p>
+          </div>
+        )}
+
+        <div className="mb-8">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Search by location or property name..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10 h-12 text-base"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <ListingSkeletonGrid />
+        ) : filteredListings.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <p className="text-muted-foreground text-lg mb-4">
+              No listings found
+            </p>
+            <Button onClick={handlePostClick}>Create First Listing</Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            {filteredListings.map((listing) => (
+              <ListingCard key={listing.id} listing={listing} />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {showFormModal && (
+        <ListingFormModal
+          isOpen={showFormModal}
+          onClose={() => setShowFormModal(false)}
+          onSuccess={handleListingCreated}
+        />
+      )}
+
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        defaultTab="login"
+      />
+
+      <Footer />
+    </div>
+  );
+}

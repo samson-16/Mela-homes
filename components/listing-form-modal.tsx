@@ -1,0 +1,241 @@
+"use client";
+
+import { useState } from "react";
+import { X, ChevronLeft } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import api from "@/lib/axios";
+import { Button } from "@/components/ui/button";
+import BasicInformationForm from "./form-steps/basic-information";
+import PropertyFeaturesForm from "./form-steps/property-feature";
+import PhotoUploadForm from "./form-steps/photo-upload";
+import PricingContactForm from "./form-steps/pricing-contact";
+
+interface ListingFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+const STEP_TITLES = [
+  "Basic Information",
+  "Property Features",
+  "Upload Photos",
+  "Pricing & Contact",
+];
+
+export default function ListingFormModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: ListingFormModalProps) {
+  const { token } = useAuth();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+    propertyType: "",
+    customPropertyType: "",
+    description: "",
+    location: "",
+    bedrooms: 0,
+    bathrooms: 0,
+    amenities: [] as string[],
+    photos: [] as string[],
+    monthlyRent: 0,
+    currency: "USD",
+    deposit: 0,
+    negotiable: false,
+    phoneNumber: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleNext = () => {
+    setCurrentStep(currentStep + 1);
+  };
+
+  const handlePrevious = () => {
+    if (currentStep === 1) {
+      onClose();
+    } else {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+      setError("");
+
+      const payload = {
+        property_type: formData.propertyType,
+        property_type_other: formData.customPropertyType || null,
+        description: formData.description,
+        location: formData.location,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        amenities: formData.amenities,
+        photos: formData.photos || [],
+        monthly_rent: formData.monthlyRent.toString(),
+        currency: formData.currency,
+        initial_deposit: formData.deposit ? formData.deposit.toString() : null,
+        negotiable: formData.negotiable,
+        phone_number: formData.phoneNumber,
+      };
+
+      await api.post("/rent-listings/", payload);
+
+      onSuccess();
+    } catch (err: any) {
+      let errorMessage = "Failed to create listing";
+      if (err.response?.data) {
+        const errorData = err.response.data;
+        if (typeof errorData === "object") {
+          const errors = Object.entries(errorData)
+            .map(([field, msgs]) => {
+              const message = Array.isArray(msgs) ? msgs[0] : msgs;
+              return `${field}: ${message}`;
+            })
+            .join(", ");
+          if (errors) errorMessage = errors;
+        }
+      }
+      setError(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const updateFormData = (updates: Partial<typeof formData>) => {
+    setFormData((prev) => ({ ...prev, ...updates }));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background overflow-hidden">
+      {/* Header */}
+      <header className="sticky top-0 z-40 bg-white border-b border-border">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div>
+              <h1 className="text-lg font-semibold text-foreground">
+                Post a Property
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Step {currentStep} of 4: {STEP_TITLES[currentStep - 1]}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="h-1 bg-muted">
+          <div
+            className="h-full bg-primary transition-all duration-300"
+            style={{ width: `${(currentStep / 4) * 100}%` }}
+          />
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main
+        className="max-w-3xl mx-auto px-4 py-8 pb-32 overflow-y-auto"
+        style={{ height: "calc(100vh - 80px)" }}
+      >
+        {/* Step Indicators */}
+        <div className="flex items-center justify-center mb-8">
+          {[1, 2, 3, 4].map((step) => (
+            <div key={step} className="flex items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
+                  currentStep > step
+                    ? "bg-primary text-primary-foreground"
+                    : currentStep === step
+                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20"
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {currentStep > step ? "✓" : step}
+              </div>
+              {step < 4 && (
+                <div
+                  className={`w-16 md:w-24 h-1 mx-2 transition-colors ${
+                    currentStep > step ? "bg-primary" : "bg-muted"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+
+        {/* Step Content */}
+        <div className="bg-white rounded-2xl border border-border p-6 md:p-8">
+          {currentStep === 1 && (
+            <BasicInformationForm
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+          {currentStep === 2 && (
+            <PropertyFeaturesForm
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+          {currentStep === 3 && (
+            <PhotoUploadForm
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+          {currentStep === 4 && (
+            <PricingContactForm
+              formData={formData}
+              updateFormData={updateFormData}
+            />
+          )}
+        </div>
+      </main>
+
+      {/* Fixed Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-border">
+        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            className="flex items-center gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            {currentStep === 1 ? "Cancel" : "Back"}
+          </Button>
+
+          {currentStep < 4 ? (
+            <Button onClick={handleNext} className="px-8">
+              Next
+            </Button>
+          ) : (
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="px-8"
+            >
+              {isSubmitting ? "Posting..." : "Post Listing"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
