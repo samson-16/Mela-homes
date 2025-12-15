@@ -78,28 +78,33 @@ export class TelegramMessageFormatter {
 
   /**
    * Create inline keyboard for listing message
+   * Both buttons open the Telegram Mini App
    */
   static createListingKeyboard(listingId?: number, phoneNumber?: string) {
     const miniAppUrl = process.env.NEXT_PUBLIC_MINI_APP_URL || "https://mela-homes.vercel.app";
     
     const keyboard = [];
     
-    // First row: Contact Info button (callback button)
-    if (phoneNumber) {
+    // First row: Contact Info button (opens Mini App contact page)
+    if (phoneNumber && listingId) {
       keyboard.push([
         {
           text: "📞 Contact Info",
-          callback_data: `contact_${listingId || "new"}`,
+          web_app: {
+            url: `${miniAppUrl}/listings/${listingId}/contact`,
+          },
         },
       ]);
     }
     
-    // Second row: View Details button (URL button to open the website)
+    // Second row: View Details button (opens Mini App listing details)
     if (listingId) {
       keyboard.push([
         {
           text: "🔍 View Details",
-          url: `${miniAppUrl}/listings/${listingId}`,
+          web_app: {
+            url: `${miniAppUrl}/listings/${listingId}`,
+          },
         },
       ]);
     }
