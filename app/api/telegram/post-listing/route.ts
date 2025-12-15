@@ -37,6 +37,13 @@ export async function POST(request: NextRequest) {
       listing.phone_number
     );
 
+    // Log photo URLs for debugging
+    console.log("Posting to Telegram with:", {
+      listingId: listing.id,
+      photoCount: listing.photos?.length || 0,
+      photos: listing.photos,
+    });
+
     // Send to Telegram channel
     const result = await telegramService.sendListingToChannel(
       message,
@@ -50,6 +57,7 @@ export async function POST(request: NextRequest) {
         messageId: result.messageId,
       });
     } else {
+      console.error("Telegram posting failed:", result.error);
       return NextResponse.json(
         {
           success: false,

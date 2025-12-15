@@ -35,6 +35,60 @@ export class TelegramService {
   }
 
   /**
+   * Validate and normalize photo URL for Telegram
+   * Telegram requires publicly accessible HTTP/HTTPS URLs
+   */
+  private normalizePhotoUrl(photoUrl: string): string | null {
+    try {
+      // Skip base64 images - Telegram can't access them
+      if (photoUrl.startsWith("data:")) {
+        console.warn("Skipping base64 image - Telegram requires HTTP/HTTPS URLs");
+        return null;
+      }
+
+      // Skip empty or invalid URLs
+      if (!photoUrl || photoUrl.trim() === "") {
+        return null;
+      }
+
+      // If it's already a full URL, validate it
+      if (photoUrl.startsWith("http://") || photoUrl.startsWith("https://")) {
+        // Validate URL format
+        const url = new URL(photoUrl);
+        // Skip localhost URLs in production
+        if (url.hostname === "localhost" || url.hostname === "127.0.0.1") {
+          console.warn(`Skipping localhost URL: ${photoUrl}`);
+          return null;
+        }
+        return photoUrl;
+      }
+
+      // If it's a relative URL, try to convert it to absolute
+      // Use the backend API URL as base since that's where photos are stored
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+      if (baseUrl) {
+        // Remove /api suffix if present to get the base domain
+        const domain = baseUrl.replace(/\/api\/?$/, "");
+        
+        // Remove leading slash from relative URL
+        const relativePath = photoUrl.startsWith("/") ? photoUrl.substring(1) : photoUrl;
+        
+        const absoluteUrl = `${domain}/${relativePath}`;
+        
+        // Validate the constructed URL
+        new URL(absoluteUrl);
+        return absoluteUrl;
+      }
+
+      console.warn(`Could not convert relative URL to absolute: ${photoUrl}`);
+      return null;
+    } catch (error) {
+      console.error(`Invalid photo URL: ${photoUrl}`, error);
+      return null;
+    }
+  }
+
+  /**
    * Send a text message to a chat
    */
   async sendMessage(
@@ -131,13 +185,20 @@ export class TelegramService {
     }
 
     try {
-      if (photos && photos.length > 0) {
+      // Validate and normalize photo URLs
+      const validPhotos = photos
+        .map((url) => this.normalizePhotoUrl(url))
+        .filter((url): url is string => url !== null);
+
+      console.log(`Processing ${photos.length} photos, ${validPhotos.length} valid for Telegram`);
+
+      if (validPhotos.length > 0) {
         // If there are photos, send as media group with caption on first photo
-        if (photos.length === 1) {
+        if (validPhotos.length === 1) {
           // Single photo
           const result = await this.sendPhoto({
             chat_id: this.channelId,
-            photo: photos[0],
+            photo: validPhotos[0],
             caption: message,
             parse_mode: "HTML",
             reply_markup: replyMarkup,
@@ -156,7 +217,7 @@ export class TelegramService {
           }
         } else {
           // Multiple photos - send as media group
-          const media: TelegramInputMedia[] = photos.slice(0, 10).map((photo, index) => ({
+          const media: TelegramInputMedia[] = validPhotos.slice(0, 10).map((photo, index) => ({
             type: "photo" as const,
             media: photo,
             ...(index === 0 && {
@@ -193,7 +254,8 @@ export class TelegramService {
           }
         }
       } else {
-        // No photos, send text message only
+        // No valid photos, send text message only
+        console.log("No valid photos found, sending text-only message");
         const result = await this.sendMessage({
           chat_id: this.channelId,
           text: message,
