@@ -80,11 +80,11 @@ export class TelegramMessageFormatter {
    * Create inline keyboard for listing message
    */
   static createListingKeyboard(listingId?: number, phoneNumber?: string) {
-    const miniAppUrl = process.env.NEXT_PUBLIC_MINI_APP_URL || "https://your-domain.com";
+    const miniAppUrl = process.env.NEXT_PUBLIC_MINI_APP_URL || "https://mela-homes.vercel.app";
     
     const keyboard = [];
     
-    // First row: Contact Info button
+    // First row: Contact Info button (callback button)
     if (phoneNumber) {
       keyboard.push([
         {
@@ -94,14 +94,12 @@ export class TelegramMessageFormatter {
       ]);
     }
     
-    // Second row: View Details button (opens Mini App)
+    // Second row: View Details button (URL button to open the website)
     if (listingId) {
       keyboard.push([
         {
           text: "🔍 View Details",
-          web_app: {
-            url: `${miniAppUrl}/listings/${listingId}`,
-          },
+          url: `${miniAppUrl}/listings/${listingId}`,
         },
       ]);
     }
