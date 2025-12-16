@@ -32,6 +32,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Footer from "@/components/footer";
 import api from "@/lib/axios";
+import dynamic from "next/dynamic";
+
+const Map = dynamic(() => import("@/components/Map"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-muted animate-pulse rounded-lg flex items-center justify-center">
+      <p className="text-muted-foreground text-sm">Loading Map...</p>
+    </div>
+  ),
+});
 
 interface ListingDetail {
   id: number;
@@ -375,17 +385,7 @@ export default function ListingDetailPage() {
                 {listing.location}
               </p>
               <div className="rounded-2xl overflow-hidden border border-border h-80 bg-muted">
-                <iframe
-                  width="100%"
-                  height="100%"
-                  style={{ border: 0 }}
-                  loading="lazy"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  src={`https://www.google.com/maps/embed/v1/place?key=AIzaSyA0pBkfNjrpM4_vLQvC5-sKNbwXTYb5P_A&q=${encodeURIComponent(
-                    listing.location
-                  )}`}
-                ></iframe>
+                <Map location={listing.location} />
               </div>
             </div>
           </div>
@@ -500,7 +500,7 @@ export default function ListingDetailPage() {
                   id="description"
                   value={editForm.description}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, description: e.target.value })
+                    setEditForm((prev) => (prev ? { ...prev, description: e.target.value } : null))
                   }
                 />
               </div>
@@ -510,7 +510,7 @@ export default function ListingDetailPage() {
                   id="location"
                   value={editForm.location}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, location: e.target.value })
+                    setEditForm((prev) => (prev ? { ...prev, location: e.target.value } : null))
                   }
                 />
               </div>
@@ -522,10 +522,9 @@ export default function ListingDetailPage() {
                     type="number"
                     value={editForm.bedrooms}
                     onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        bedrooms: parseInt(e.target.value) || 0,
-                      })
+                      setEditForm((prev) =>
+                        prev ? { ...prev, bedrooms: parseInt(e.target.value) || 0 } : null
+                      )
                     }
                   />
                 </div>
@@ -536,10 +535,9 @@ export default function ListingDetailPage() {
                     type="number"
                     value={editForm.bathrooms}
                     onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        bathrooms: parseInt(e.target.value) || 0,
-                      })
+                      setEditForm((prev) =>
+                        prev ? { ...prev, bathrooms: parseInt(e.target.value) || 0 } : null
+                      )
                     }
                   />
                 </div>
@@ -551,7 +549,7 @@ export default function ListingDetailPage() {
                     id="monthly_rent"
                     value={editForm.monthly_rent}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, monthly_rent: e.target.value })
+                      setEditForm((prev) => (prev ? { ...prev, monthly_rent: e.target.value } : null))
                     }
                   />
                 </div>
@@ -561,7 +559,7 @@ export default function ListingDetailPage() {
                     id="currency"
                     value={editForm.currency}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, currency: e.target.value })
+                      setEditForm((prev) => (prev ? { ...prev, currency: e.target.value } : null))
                     }
                   />
                 </div>
@@ -572,7 +570,7 @@ export default function ListingDetailPage() {
                   id="phone_number"
                   value={editForm.phone_number}
                   onChange={(e) =>
-                    setEditForm({ ...editForm, phone_number: e.target.value })
+                    setEditForm((prev) => (prev ? { ...prev, phone_number: e.target.value } : null))
                   }
                 />
               </div>
