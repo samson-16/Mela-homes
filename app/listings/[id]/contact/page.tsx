@@ -137,28 +137,7 @@ export default function ContactPage() {
           </div>
 
           {/* Phone Number Display */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
-            <p className="text-sm text-muted-foreground mb-2">Phone Number</p>
-            <div className="flex items-center justify-between">
-              <p className="text-2xl font-bold text-foreground tracking-wide">
-                {listing.phone_number}
-              </p>
-              <button
-                onClick={handleCopyPhone}
-                className="px-4 py-2 bg-white rounded-lg shadow-sm hover:shadow transition-shadow flex items-center gap-2"
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-medium text-green-600">Copied!</span>
-                  </>
-                ) : (
-                  <span className="text-sm font-medium text-foreground">Copy</span>
-                )}
-              </button>
-            </div>
-          </div>
-
+          {/* Phone Number Display Hidden for Privacy */}
           {/* Action Buttons */}
           <div className="space-y-3">
             <Button

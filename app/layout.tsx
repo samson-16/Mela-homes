@@ -9,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Rental Listings - Find Your Perfect Home",
+  title: "Mela Homes",
   description:
-    "Browse and post rental listings. Find apartments, houses, offices, and more.",
+    "Find your perfect home with Mela Homes. Browse apartments, houses, and more.",
   generator: "v0.app",
   icons: {
     icon: [

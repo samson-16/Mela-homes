@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Search, Plus, User, LogOut } from "lucide-react";
-import { FaUserCircle } from "react-icons/fa";
+
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth-context";
@@ -235,7 +236,7 @@ export default function ListingsPage() {
       <header className="sticky top-0 z-40 bg-white border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-foreground">
-            Rental Listings
+            Mela Homes
           </h1>
           <div className="flex items-center gap-4">
             {!token ? (
@@ -251,11 +252,13 @@ export default function ListingsPage() {
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-12 w-12 rounded-full"
-                    >
-                      <FaUserCircle className="h-8 w-8" />
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user?.avatar || ""} alt={user?.username || "User"} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(user?.username || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-56" align="end" forceMount>
