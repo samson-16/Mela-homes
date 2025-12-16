@@ -1,7 +1,6 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import { Upload, X } from "lucide-react";
 
 interface PhotoUploadFormProps {
@@ -17,6 +16,47 @@ export default function PhotoUploadForm({
 }: PhotoUploadFormProps) {
   const [previews, setPreviews] = useState<string[]>(formData.photos || []);
 
+  /* Helper to compress image before Base64 conversion */
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          // Resize logic
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress to JPEG at 0.7 quality
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(compressedBase64);
+        };
+      };
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -24,25 +64,18 @@ export default function PhotoUploadForm({
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const base64 = await readFileAsBase64(file);
+        // Use compression instead of raw conversion
+        const base64 = await compressImage(file);
         newPreviews.push(base64);
       }
 
+      // Limit to 1 photo if strict mode needed, but compression allows multiple
+      // User asked "what if... we only send one photo", so let's allow multiple for now since they are compressed
       const updatedPreviews = [...previews, ...newPreviews];
       setPreviews(updatedPreviews);
       updateFormData({ photos: updatedPreviews });
     }
     e.target.value = "";
-  };
-
-  const readFileAsBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        resolve(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    });
   };
 
   const removePhoto = (index: number) => {

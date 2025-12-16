@@ -78,8 +78,7 @@ export class TelegramMessageFormatter {
 
   /**
    * Create inline keyboard for listing message
-   * Uses web_app buttons to open listing inside Telegram Mini App
-   * Note: Requires 'Menu Button' to be configured in BotFather or buttons will fail
+   * Uses standard URL buttons that open in Telegram's in-app browser
    */
   static createListingKeyboard(listingId?: number, phoneNumber?: string) {
     const miniAppUrl = process.env.NEXT_PUBLIC_MINI_APP_URL || "https://mela-homes.vercel.app";

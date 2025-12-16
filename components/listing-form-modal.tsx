@@ -30,6 +30,7 @@ export default function ListingFormModal({
 }: ListingFormModalProps) {
   const { token } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  /* State initialization with Base64 photos array */
   const [formData, setFormData] = useState({
     propertyType: "",
     customPropertyType: "",
@@ -38,7 +39,7 @@ export default function ListingFormModal({
     bedrooms: 0,
     bathrooms: 0,
     amenities: [] as string[],
-    photos: [] as string[],
+    photos: [] as string[], // Reverted to string[] (Base64)
     monthlyRent: 0,
     currency: "USD",
     deposit: 0,
@@ -73,7 +74,7 @@ export default function ListingFormModal({
         bedrooms: formData.bedrooms,
         bathrooms: formData.bathrooms,
         amenities: formData.amenities,
-        photos: formData.photos || [],
+        photos: formData.photos, // Already Base64 strings
         monthly_rent: formData.monthlyRent.toString(),
         currency: formData.currency,
         initial_deposit: formData.deposit ? formData.deposit.toString() : null,
@@ -87,13 +88,12 @@ export default function ListingFormModal({
 
       // Post to Telegram channel (non-blocking)
       try {
-        // Use response data to get processed photo URLs
         const responseData = createdListing.data || createdListing;
         const telegramPayload = {
           ...payload,
           id: responseData.id,
-          // Use backend URLs if available (required for Telegram), fallback to payload
-          photos: responseData.photos || payload.photos,
+          // Use backend URLs from the response
+          photos: responseData.photos || [],
         };
 
         const telegramResponse = await fetch("/api/telegram/post-listing", {
@@ -108,11 +108,9 @@ export default function ListingFormModal({
 
         if (!telegramResult.success && !telegramResult.skipped) {
           console.warn("Failed to post to Telegram:", telegramResult.error);
-          // Don't fail the entire operation, just log the warning
         }
       } catch (telegramError) {
         console.error("Error posting to Telegram:", telegramError);
-        // Continue even if Telegram posting fails
       }
 
       onSuccess();
