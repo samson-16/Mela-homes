@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     console.log("Posting to Telegram with:", {
       listingId: listing.id,
       photoCount: listing.photos?.length || 0,
-      photos: listing.photos,
+      // REMOVED full photos log to prevent 500 error (payload too large)
     });
 
     // Send to Telegram channel
