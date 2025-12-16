@@ -153,11 +153,21 @@ export default function ListingsPage() {
           } else if (startParam.startsWith("contact-")) {
             const id = startParam.replace("contact-", "");
             router.push(`/listings/${id}/contact`);
+          } else if (startParam === "create-listing") {
+            // Handle "Post Listing" deep link
+            // Using a slight delay to ensure Auth context is ready
+            setTimeout(() => {
+              if (token) {
+                setShowFormModal(true);
+              } else {
+                setShowAuthModal(true);
+              }
+            }, 100);
           }
         }, 100);
       }
     }
-  }, [router]);
+  }, [router, token]);
 
   useEffect(() => {
     fetchListings();

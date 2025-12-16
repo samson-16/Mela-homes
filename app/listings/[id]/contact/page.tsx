@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Phone, Mail, MessageCircle, X, CheckCircle } from "lucide-react";
+import { ContactPageSkeleton } from "@/components/listing-skeleton";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axios";
 
@@ -72,11 +73,7 @@ export default function ContactPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <p className="text-muted-foreground">Loading contact info...</p>
-      </div>
-    );
+    return <ContactPageSkeleton />;
   }
 
   if (!listing) {

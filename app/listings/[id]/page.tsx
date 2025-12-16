@@ -19,6 +19,7 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
+import { ListingDetailSkeleton } from "@/components/listing-skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -155,11 +156,7 @@ export default function ListingDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-muted-foreground">Loading listing details...</p>
-      </div>
-    );
+    return <ListingDetailSkeleton />;
   }
 
   if (error || !listing) {

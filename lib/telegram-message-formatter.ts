@@ -108,6 +108,14 @@ export class TelegramMessageFormatter {
         },
       ]);
     }
+
+    // Third row: Post a Listing button (Deep Link)
+    keyboard.push([
+      {
+        text: "➕ Post Your Property",
+        url: `${deepLinkBase}?startapp=create-listing`,
+      },
+    ]);
     
     return {
       inline_keyboard: keyboard,
