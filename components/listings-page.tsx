@@ -91,13 +91,23 @@ interface BackendListing {
 // ];
 
 const transformBackendListing = (backendListing: BackendListing): Listing => {
+  // Handle photos safely (legacy string[] vs potential object structure)
+  let imageUrl = "https://placehold.co/600x400?text=No+Image";
+  if (backendListing.photos && backendListing.photos.length > 0) {
+    const firstPhoto = backendListing.photos[0];
+    if (typeof firstPhoto === "string") {
+      imageUrl = firstPhoto;
+    } else if (typeof firstPhoto === "object" && (firstPhoto as any).url) {
+      imageUrl = (firstPhoto as any).url;
+    }
+  }
+
   return {
     id: backendListing.id,
     title:
       backendListing.description ||
       `${backendListing.property_type} in ${backendListing.location}`,
-    image:
-    backendListing.photos[0],
+    image: imageUrl,
     price: Number.parseInt(backendListing.monthly_rent),
     currency: backendListing.currency,
     bedrooms: backendListing.bedrooms,
@@ -118,6 +128,30 @@ export default function ListingsPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle Telegram Mini App Deep Linking
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const webApp = (window as any).Telegram?.WebApp;
+      if (webApp) {
+        webApp.ready();
+        
+        // Parse start_param for deep linking
+        // format: listing-<id> or contact-<id>
+        const startParam = webApp.initDataUnsafe?.start_param;
+        if (startParam) {
+          console.log("Telegram Deep Link detected:", startParam);
+          if (startParam.startsWith("listing-")) {
+            const id = startParam.replace("listing-", "");
+            router.push(`/listings/${id}`);
+          } else if (startParam.startsWith("contact-")) {
+            const id = startParam.replace("contact-", "");
+            router.push(`/listings/${id}/contact`);
+          }
+        }
+      }
+    }
+  }, [router]);
 
   useEffect(() => {
     fetchListings();
