@@ -132,15 +132,21 @@ export default function ListingsPage() {
   // Handle Telegram Mini App Deep Linking
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Check for start_param in initData
       const webApp = (window as any).Telegram?.WebApp;
-      if (webApp) {
-        webApp.ready();
+      let startParam = webApp?.initDataUnsafe?.start_param;
+
+      // Fallback: Check URL search params (tgWebAppStartParam)
+      if (!startParam) {
+        const urlParams = new URLSearchParams(window.location.search);
+        startParam = urlParams.get("tgWebAppStartParam");
+      }
+
+      if (startParam) {
+        console.log("Telegram Deep Link detected:", startParam);
         
-        // Parse start_param for deep linking
-        // format: listing-<id> or contact-<id>
-        const startParam = webApp.initDataUnsafe?.start_param;
-        if (startParam) {
-          console.log("Telegram Deep Link detected:", startParam);
+        // Add a small delay to ensure router is ready
+        setTimeout(() => {
           if (startParam.startsWith("listing-")) {
             const id = startParam.replace("listing-", "");
             router.push(`/listings/${id}`);
@@ -148,7 +154,7 @@ export default function ListingsPage() {
             const id = startParam.replace("contact-", "");
             router.push(`/listings/${id}/contact`);
           }
-        }
+        }, 100);
       }
     }
   }, [router]);
