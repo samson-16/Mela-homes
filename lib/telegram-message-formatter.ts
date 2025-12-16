@@ -81,30 +81,30 @@ export class TelegramMessageFormatter {
    * Uses standard URL buttons that open in Telegram's in-app browser
    */
   static createListingKeyboard(listingId?: number, phoneNumber?: string) {
-    const miniAppUrl = process.env.NEXT_PUBLIC_MINI_APP_URL || "https://mela-homes.vercel.app";
+    // Detailed Deep Link for Mini App (using t.me link as requested)
+    // Note: startapp param supports a-zA-Z0-9_- only. Slashes are not allowed.
+    // We format as 'listing-<id>' or 'contact-<id>'
+    const botAppName = "melahomesforethiopiabot/melahomes";
+    const deepLinkBase = `https://t.me/${botAppName}`;
     
     const keyboard = [];
     
-    // First row: Contact Info button (opens Mini App contact page)
+    // First row: Contact Info button (Deep Link)
     if (phoneNumber && listingId) {
       keyboard.push([
         {
           text: "📞 Contact Info",
-          web_app: {
-            url: `${miniAppUrl}/listings/${listingId}/contact`,
-          },
+          url: `${deepLinkBase}?startapp=contact-${listingId}`,
         },
       ]);
     }
     
-    // Second row: View Details button (opens Mini App listing details)
+    // Second row: View Details button (Deep Link)
     if (listingId) {
       keyboard.push([
         {
           text: "🔍 View Details",
-          web_app: {
-            url: `${miniAppUrl}/listings/${listingId}`,
-          },
+          url: `${deepLinkBase}?startapp=listing-${listingId}`,
         },
       ]);
     }
