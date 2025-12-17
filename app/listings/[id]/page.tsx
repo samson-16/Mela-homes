@@ -33,12 +33,13 @@ import { Label } from "@/components/ui/label";
 import Footer from "@/components/footer";
 import api from "@/lib/axios";
 import dynamic from "next/dynamic";
+import { AMENITIES } from "@/lib/constants";
 
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
   loading: () => (
     <div className="h-full w-full bg-muted animate-pulse rounded-lg flex items-center justify-center">
-      <p className="text-muted-foreground text-sm">Loading Map...</p>
+      <p className="text-muted-foreground text-sm">ካርታው እየጫነ ነው...</p>
     </div>
   ),
 });
@@ -74,6 +75,9 @@ const amenityIcons: Record<string, React.ReactNode> = {
   electricity: <Zap className="w-6 h-6" />,
   security: <Lock className="w-6 h-6" />,
   internet: <Wifi className="w-6 h-6" />,
+  pool: <Droplet className="w-6 h-6" />, // Fallback for pool
+  parking: <Grid3x3 className="w-6 h-6" />, // Fallback for parking
+  gym: <Zap className="w-6 h-6" />, // Fallback for gym
 };
 
 export default function ListingDetailPage() {
@@ -105,7 +109,7 @@ export default function ListingDetailPage() {
         setListing(listingData);
       } catch (error) {
         console.error("Error fetching listing:", error);
-        setError("Could not load listing details");
+        setError("ንብረቱን ማምጣት አልተቻለም");
       } finally {
         setLoading(false);
       }
@@ -120,7 +124,7 @@ export default function ListingDetailPage() {
       await api.delete(`/rent-listings/${listingId}/`);
       router.push("/");
     } catch (err) {
-      setError("Failed to delete listing");
+      setError("ንብረቱን መሰረዝ አልተቻለም");
       setIsDeleting(false);
       setShowDeleteConfirm(false);
     }
@@ -159,7 +163,7 @@ export default function ListingDetailPage() {
       setListing(updatedListing);
       setShowEditModal(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update");
+      setError(err instanceof Error ? err.message : "ማስተካከል አልተቻለም");
     } finally {
       setIsSaving(false);
     }
@@ -172,9 +176,9 @@ export default function ListingDetailPage() {
   if (error || !listing) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-muted-foreground">{error || "Listing not found"}</p>
+        <p className="text-muted-foreground">{error || "ንብረት አልተገኘም"}</p>
         <Button onClick={() => router.push("/")} variant="outline">
-          Back to Listings
+          ወደ ዝርዝር ተመለስ
         </Button>
       </div>
     );
@@ -188,7 +192,7 @@ export default function ListingDetailPage() {
   const monthlyRent = Number.parseInt(listing.monthly_rent);
   const hostName = listing.owner_details
     ? `${listing.owner_details.first_name} ${listing.owner_details.last_name}`
-    : "Host";
+    : "አስተናጋጅ";
 
   return (
     <div className="min-h-screen bg-background">
@@ -204,7 +208,7 @@ export default function ListingDetailPage() {
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground">
               <Share2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Share</span>
+              <span className="text-sm font-medium">አጋራ</span>
             </button>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
@@ -215,7 +219,7 @@ export default function ListingDetailPage() {
                   isFavorite ? "fill-current text-rose-500" : ""
                 }`}
               />
-              <span className="text-sm font-medium">Save</span>
+              <span className="text-sm font-medium">አስቀምጥ</span>
             </button>
             {isOwner && (
               <>
@@ -224,14 +228,14 @@ export default function ListingDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground"
                 >
                   <Edit2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Edit</span>
+                  <span className="text-sm font-medium">አስተካክል</span>
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Delete</span>
+                  <span className="text-sm font-medium">ሰርዝ</span>
                 </button>
               </>
             )}
@@ -273,7 +277,7 @@ export default function ListingDetailPage() {
                 className="absolute bottom-4 right-4 bg-black/80 hover:bg-black text-white px-3 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium"
               >
                 <Grid3x3 className="w-4 h-4" />
-                Show all photos
+                ሁሉንም ፎቶዎች አሳይ
               </button>
             )}
           </div>
@@ -294,7 +298,7 @@ export default function ListingDetailPage() {
                 />
                 {idx === 3 && photos.length > 4 && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white font-semibold">
-                    +{photos.length - 4} more
+                    +{photos.length - 4} ተጨማሪ
                   </div>
                 )}
               </div>
@@ -309,7 +313,7 @@ export default function ListingDetailPage() {
                 {listing.description || propertyType}
               </h1>
               <p className="text-lg text-muted-foreground mb-4">
-                {listing.bedrooms} bed · {listing.bathrooms} bath
+                {listing.bedrooms} መኝታ · {listing.bathrooms} መታጠቢያ
               </p>
               <p className="text-base text-muted-foreground flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
@@ -319,7 +323,7 @@ export default function ListingDetailPage() {
 
             <div className="border-t border-border pt-6">
               <h3 className="text-2xl font-bold text-foreground mb-6">
-                What this place offers
+                የንብረቱ ዝርዝሮች
               </h3>
               <div className="grid grid-cols-2 gap-6">
                 {listing.amenities && listing.amenities.length > 0 ? (
@@ -329,13 +333,13 @@ export default function ListingDetailPage() {
                         {amenityIcons[amenity.toLowerCase()] || "✓"}
                       </div>
                       <span className="text-foreground font-medium capitalize">
-                        {amenity.replace(/_/g, " ")}
+                        {AMENITIES.find(a => a.value === amenity)?.amharic || amenity.replace(/_/g, " ")}
                       </span>
                     </div>
                   ))
                 ) : (
                   <p className="text-muted-foreground col-span-2">
-                    No amenities listed
+                    ምንም የተገለጸ የለም
                   </p>
                 )}
               </div>
@@ -344,7 +348,7 @@ export default function ListingDetailPage() {
             {listing.description && (
               <div className="border-t border-border pt-6">
                 <h3 className="text-2xl font-bold text-foreground mb-4">
-                  About this property
+                  ስለዚህ ንብረት
                 </h3>
                 <p className="text-muted-foreground text-base leading-relaxed">
                   {listing.description}
@@ -354,7 +358,7 @@ export default function ListingDetailPage() {
 
             <div className="border-t border-border pt-6">
               <h3 className="text-2xl font-bold text-foreground mb-6">
-                Meet your host
+                አስተናጋጅዎን ይወቁ
               </h3>
               <div className="flex items-start gap-6 bg-gradient-to-r from-gray-50 to-white border border-border rounded-2xl p-6">
                 <div className="flex flex-col items-center">
@@ -367,11 +371,11 @@ export default function ListingDetailPage() {
                     {hostName}
                   </h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {listing.owner_details?.email || "Host email"}
+                    {listing.owner_details?.email || "የአስተናጋጅ ኢሜይል"}
                   </p>
                   <button className="mt-4 px-6 py-2 border border-border rounded-lg text-foreground font-medium hover:bg-muted transition-colors flex items-center gap-2">
                     <MessageCircle className="w-4 h-4" />
-                    Message host
+                    አስተናጋጁን ያናግሩ
                   </button>
                 </div>
               </div>
@@ -379,7 +383,7 @@ export default function ListingDetailPage() {
 
             <div className="border-t border-border pt-6">
               <h3 className="text-2xl font-bold text-foreground mb-6">
-                Where you'll be
+                የቦታው አቀማመጥ
               </h3>
               <p className="text-base text-muted-foreground mb-4">
                 {listing.location}
@@ -394,7 +398,7 @@ export default function ListingDetailPage() {
             <div className="sticky top-24 bg-white border border-border rounded-2xl p-6 shadow-lg space-y-6">
               <div>
                 <p className="text-sm text-muted-foreground mb-1">
-                  Price per month
+                  ወርሃዊ ዋጋ
                 </p>
                 <p className="text-3xl font-bold text-foreground">
                   {listing.currency}{" "}
@@ -408,16 +412,16 @@ export default function ListingDetailPage() {
                 <div className="grid grid-cols-2 gap-4 border border-border rounded-lg overflow-hidden">
                   <div className="border-r border-border p-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Available from
+                      ከዚህ ቀን ጀምሮ ይገኛል
                     </p>
-                    <p className="text-sm font-medium text-foreground">Now</p>
+                    <p className="text-sm font-medium text-foreground">አሁን</p>
                   </div>
                   <div className="p-4">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                      Lease term
+                      የኪራይ ውል
                     </p>
                     <p className="text-sm font-medium text-foreground">
-                      Flexible
+                      ተለዋዋጭ
                     </p>
                   </div>
                 </div>
@@ -428,13 +432,13 @@ export default function ListingDetailPage() {
                 className="flex items-center justify-center gap-2 w-full py-3 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-semibold transition-colors"
               >
                 <Phone className="w-4 h-4" />
-                Contact Owner
+                ባለቤቱን ያናግሩ
               </a>
 
               {listing.initial_deposit && (
                 <div className="border-t border-border pt-4">
                   <p className="text-sm text-muted-foreground mb-2">
-                    Initial Deposit
+                    የመጀመሪያ ቅድመ ክፍያ
                   </p>
                   <p className="font-semibold text-foreground">
                     {listing.currency}{" "}
@@ -446,7 +450,7 @@ export default function ListingDetailPage() {
               {listing.negotiable && (
                 <div className="border-t border-border pt-4">
                   <p className="text-sm font-medium text-green-600">
-                    Price negotiable
+                    ዋጋው ድርድር አለው
                   </p>
                 </div>
               )}
@@ -459,11 +463,10 @@ export default function ListingDetailPage() {
       <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete Listing</DialogTitle>
+            <DialogTitle>ንብረቱን ይሰርዙ</DialogTitle>
           </DialogHeader>
           <p className="text-muted-foreground">
-            Are you sure you want to delete this listing? This action cannot be
-            undone.
+            ይህን ንብረት በእርግጠኝነት መሰረዝ ይፈልጋሉ? ይህን እርምጃ መመለስ አይቻልም።
           </p>
           <div className="flex gap-3 pt-4">
             <Button
@@ -472,7 +475,7 @@ export default function ListingDetailPage() {
               onClick={() => setShowDeleteConfirm(false)}
               disabled={isDeleting}
             >
-              Cancel
+              አቋርጥ
             </Button>
             <Button
               variant="destructive"
@@ -480,7 +483,7 @@ export default function ListingDetailPage() {
               onClick={handleDelete}
               disabled={isDeleting}
             >
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? "እየተሰረዘ ነው..." : "ሰርዝ"}
             </Button>
           </div>
         </DialogContent>
@@ -490,12 +493,12 @@ export default function ListingDetailPage() {
       <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Listing</DialogTitle>
+            <DialogTitle>ንብረቱን ያስተካክሉ</DialogTitle>
           </DialogHeader>
           {editForm && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">መግለጫ</Label>
                 <Input
                   id="description"
                   value={editForm.description}
@@ -505,7 +508,7 @@ export default function ListingDetailPage() {
                 />
               </div>
               <div>
-                <Label htmlFor="location">Location</Label>
+                <Label htmlFor="location">ቦታ</Label>
                 <Input
                   id="location"
                   value={editForm.location}
@@ -516,7 +519,7 @@ export default function ListingDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                  <Label htmlFor="bedrooms">መኝታ ቤቶች</Label>
                   <Input
                     id="bedrooms"
                     type="number"
@@ -529,7 +532,7 @@ export default function ListingDetailPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                  <Label htmlFor="bathrooms">መታጠቢያ ቤቶች</Label>
                   <Input
                     id="bathrooms"
                     type="number"
@@ -544,7 +547,7 @@ export default function ListingDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="monthly_rent">Monthly Rent</Label>
+                  <Label htmlFor="monthly_rent">ወርሃዊ ኪራይ</Label>
                   <Input
                     id="monthly_rent"
                     value={editForm.monthly_rent}
@@ -554,7 +557,7 @@ export default function ListingDetailPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">ምንዛሬ</Label>
                   <Input
                     id="currency"
                     value={editForm.currency}
@@ -565,7 +568,7 @@ export default function ListingDetailPage() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="phone_number">Phone Number</Label>
+                <Label htmlFor="phone_number">ስልክ ቁጥር</Label>
                 <Input
                   id="phone_number"
                   value={editForm.phone_number}
@@ -580,14 +583,14 @@ export default function ListingDetailPage() {
                   className="flex-1"
                   onClick={() => setShowEditModal(false)}
                 >
-                  Cancel
+                  አቋርጥ
                 </Button>
                 <Button
                   className="flex-1"
                   onClick={handleSaveEdit}
                   disabled={isSaving}
                 >
-                  {isSaving ? "Saving..." : "Save Changes"}
+                  {isSaving ? "እየተስተካከለ ነው..." : "ለውጦችን አስቀምጥ"}
                 </Button>
               </div>
             </div>

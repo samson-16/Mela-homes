@@ -9,17 +9,7 @@ interface PropertyFeaturesFormProps {
   updateFormData: (updates: Record<string, any>) => void
 }
 
-const AMENITIES = [
-  { label: "Water", value: "water", amharic: "ውሃ" },
-  { label: "Electricity", value: "electricity", amharic: "ኤሌክትሪክ" },
-  { label: "Security", value: "security", amharic: "የጥበቃ አገልግሎት" },
-  { label: "Elevator", value: "elevator", amharic: "ሊፍት" },
-  { label: "Swimming Pool", value: "pool", amharic: "የመዋኛ ገንዳ" },
-  { label: "Internet", value: "internet", amharic: "ኢንተርኔት" },
-  { label: "Parking", value: "parking", amharic: "ፓርኪንግ" },
-  { label: "Generator", value: "generator", amharic: "ጀነሬተር" },
-  { label: "Garden", value: "garden", amharic: "ጋርደን" },
-]
+import { AMENITIES } from "@/lib/constants"
 
 export default function PropertyFeaturesForm({ formData, updateFormData }: PropertyFeaturesFormProps) {
   const handleAmenityToggle = (value: string) => {
@@ -31,11 +21,11 @@ export default function PropertyFeaturesForm({ formData, updateFormData }: Prope
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Property Features</h2>
+      <h2 className="text-xl font-semibold">የንብረት ባህሪያት</h2>
 
       {/* Bedrooms */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Bedrooms</label>
+        <label className="block text-sm font-medium text-foreground mb-2">መኝታ ቤቶች</label>
         <input
           type="number"
           min="0"
@@ -47,7 +37,7 @@ export default function PropertyFeaturesForm({ formData, updateFormData }: Prope
 
       {/* Bathrooms */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-2">Bathrooms</label>
+        <label className="block text-sm font-medium text-foreground mb-2">መታጠቢያ ቤቶች</label>
         <input
           type="number"
           min="0"
@@ -59,7 +49,7 @@ export default function PropertyFeaturesForm({ formData, updateFormData }: Prope
 
       {/* Amenities */}
       <div>
-        <label className="block text-sm font-medium text-foreground mb-3">Amenities</label>
+        <label className="block text-sm font-medium text-foreground mb-3">ተጨማሪዎች</label>
         <div className="grid grid-cols-2 gap-3">
           {AMENITIES.map((amenity) => (
             <label key={amenity.value} className="flex items-center gap-2 cursor-pointer">
@@ -70,7 +60,7 @@ export default function PropertyFeaturesForm({ formData, updateFormData }: Prope
                 className="rounded border-border"
               />
               <span className="text-sm text-foreground">
-                {amenity.label} <span className="text-xs text-muted-foreground">({amenity.amharic})</span>
+                {amenity.amharic}
               </span>
             </label>
           ))}

@@ -49,7 +49,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
         {/* Guest Favorite Badge */}
         {listing.isFeatured && (
           <div className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full text-xs font-medium text-foreground">
-            Guest favorite
+            የእንግዶች ምርጫ
           </div>
         )}
 
@@ -89,7 +89,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
 
         {/* Location */}
         <p className="text-sm text-muted-foreground line-clamp-1">
-          {listing.propertyType} in {listing.location}
+          {listing.propertyType} በ {listing.location}
         </p>
 
         {/* Price */}
@@ -97,7 +97,7 @@ export default function ListingCard({ listing }: ListingCardProps) {
           <span className="font-bold">
             {listing.currency} {listing.price.toLocaleString()}
           </span>
-          <span className="text-muted-foreground font-normal"> per month</span>
+          <span className="text-muted-foreground font-normal"> በወር</span>
         </p>
       </div>
     </div>

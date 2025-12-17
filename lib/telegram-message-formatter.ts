@@ -17,15 +17,18 @@ interface ListingData {
   phone_number: string;
 }
 
+import { AMENITIES } from "@/lib/constants";
+
 const AMENITY_EMOJIS: Record<string, string> = {
   water: "💧",
   electricity: "⚡",
   security: "🔒",
+  elevator: "🛗",
+  pool: "🏊",
   internet: "📡",
   wifi: "📡",
   parking: "🅿️",
-  gym: "🏋️",
-  pool: "🏊",
+  generator: "🔋",
   garden: "🌳",
   balcony: "🏞️",
 };
@@ -42,36 +45,37 @@ export class TelegramMessageFormatter {
     let message = `🏠 <b>${listing.description || propertyType}</b>\n\n`;
     
     // Location
-    message += `📍 <b>Location:</b> ${listing.location}\n`;
+    message += `📍 <b>ቦታ:</b> ${listing.location}\n`;
     
     // Bedrooms and Bathrooms
-    message += `🛏️ <b>Bedrooms:</b> ${listing.bedrooms} | 🚿 <b>Bathrooms:</b> ${listing.bathrooms}\n`;
+    message += `🛏️ <b>መኝታ ቤቶች:</b> ${listing.bedrooms} | 🚿 <b>መታጠቢያ ቤቶች:</b> ${listing.bathrooms}\n`;
     
     // Price
-    message += `💰 <b>Price:</b> ${listing.currency} ${monthlyRent.toLocaleString()}/month`;
+    message += `💰 <b>ዋጋ:</b> ${listing.currency} ${monthlyRent.toLocaleString()}/ወር`;
     if (listing.negotiable) {
-      message += ` <i>(Negotiable)</i>`;
+      message += ` <i>(ድርድር አለው)</i>`;
     }
     message += `\n`;
     
     // Initial Deposit
     if (listing.initial_deposit) {
       const deposit = Number.parseInt(listing.initial_deposit);
-      message += `💵 <b>Deposit:</b> ${listing.currency} ${deposit.toLocaleString()}\n`;
+      message += `💵 <b>ቅድመ ክፍያ:</b> ${listing.currency} ${deposit.toLocaleString()}\n`;
     }
     
     // Amenities
     if (listing.amenities && listing.amenities.length > 0) {
-      message += `\n✨ <b>Amenities:</b>\n`;
+      message += `\n✨ <b>ተጨማሪዎች:</b>\n`;
       listing.amenities.forEach((amenity) => {
         const emoji = AMENITY_EMOJIS[amenity.toLowerCase()] || "✓";
-        const displayName = amenity.replace(/_/g, " ");
+        const amenityObj = AMENITIES.find(a => a.value === amenity);
+        const displayName = amenityObj ? amenityObj.amharic : amenity.replace(/_/g, " ");
         message += `${emoji} ${displayName}\n`;
       });
     }
     
     // Property Type
-    message += `\n🏷️ <b>Type:</b> ${propertyType}`;
+    message += `\n🏷️ <b>አይነት:</b> ${propertyType}`;
     
     return message;
   }
@@ -93,7 +97,7 @@ export class TelegramMessageFormatter {
     if (phoneNumber && listingId) {
       keyboard.push([
         {
-          text: "📞 Contact Info",
+          text: "📞 አድራሻ",
           url: `${deepLinkBase}?startapp=contact-${listingId}`,
         },
       ]);
@@ -103,7 +107,7 @@ export class TelegramMessageFormatter {
     if (listingId) {
       keyboard.push([
         {
-          text: "🔍 View Details",
+          text: "🔍 ዝርዝር ይመልከቱ",
           url: `${deepLinkBase}?startapp=listing-${listingId}`,
         },
       ]);
@@ -112,7 +116,7 @@ export class TelegramMessageFormatter {
     // Third row: Post a Listing button (Deep Link)
     keyboard.push([
       {
-        text: "➕ Post Your Property",
+        text: "➕ የራስዎን ንብረት ይለጥፉ",
         url: `${deepLinkBase}?startapp=create-listing`,
       },
     ]);
@@ -126,10 +130,10 @@ export class TelegramMessageFormatter {
    * Format contact information message
    */
   static formatContactMessage(phoneNumber: string, propertyDescription: string): string {
-    return `📱 <b>Contact Information</b>\n\n` +
-           `Property: ${propertyDescription}\n` +
-           `Phone: <code>${phoneNumber}</code>\n\n` +
-           `<i>Click the phone number to copy it.</i>`;
+    return `📱 <b>የአድራሻ መረጃ</b>\n\n` +
+           `ንብረት: ${propertyDescription}\n` +
+           `ስልክ: <code>${phoneNumber}</code>\n\n` +
+           `<i>ስልክ ቁጥሩን ለመቅዳት ይጫኑት።</i>`;
   }
 
   /**

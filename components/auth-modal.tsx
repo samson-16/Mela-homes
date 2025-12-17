@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -45,6 +46,7 @@ export default function AuthModal({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(defaultTab);
+  const [showPassword, setShowPassword] = useState(false);
 
   const {
     register: registerLogin,
@@ -144,11 +146,25 @@ export default function AuthModal({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...registerLogin("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    {...registerLogin("password")}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {loginErrors.password && (
                   <p className="text-destructive text-xs">
                     {loginErrors.password.message}
@@ -224,11 +240,25 @@ export default function AuthModal({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="r-password">Password</Label>
-                <Input
-                  id="r-password"
-                  type="password"
-                  {...registerSignup("password")}
-                />
+                <div className="relative">
+                  <Input
+                    id="r-password"
+                    type={showPassword ? "text" : "password"}
+                    {...registerSignup("password")}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {signupErrors.password && (
                   <p className="text-destructive text-xs">
                     {signupErrors.password.message}

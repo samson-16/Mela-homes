@@ -17,10 +17,10 @@ interface ListingFormModalProps {
 }
 
 const STEP_TITLES = [
-  "Basic Information",
-  "Property Features",
-  "Upload Photos",
-  "Pricing & Contact",
+  "መሰረታዊ መረጃ",
+  "የንብረት ባህሪያት",
+  "ፎቶዎችን ይስቀሉ",
+  "ዋጋ እና አድራሻ",
 ];
 
 export default function ListingFormModal({
@@ -61,36 +61,81 @@ export default function ListingFormModal({
     }
   };
 
+  /* Helper to convert Base64 to Blob for file upload */
+  const dataURLtoBlob = (dataurl: string) => {
+    const arr = dataurl.split(",");
+    const match = arr[0].match(/:(.*?);/);
+    const mime = match ? match[1] : "image/jpeg";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], { type: mime });
+  };
+
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
       setError("");
 
-      const payload = {
-        property_type: formData.propertyType,
-        property_type_other: formData.customPropertyType || null,
-        description: formData.description,
-        location: formData.location,
-        bedrooms: formData.bedrooms,
-        bathrooms: formData.bathrooms,
-        amenities: formData.amenities,
-        photos: formData.photos, // Already Base64 strings
-        monthly_rent: formData.monthlyRent.toString(),
-        currency: formData.currency,
-        initial_deposit: formData.deposit ? formData.deposit.toString() : null,
-        negotiable: formData.negotiable,
-        phone_number: formData.phoneNumber,
-      };
+      const formDataPayload = new FormData();
+      formDataPayload.append("property_type", formData.propertyType);
+      if (formData.customPropertyType) {
+        formDataPayload.append("property_type_other", formData.customPropertyType);
+      }
+      formDataPayload.append("description", formData.description);
+      formDataPayload.append("location", formData.location);
+      formDataPayload.append("bedrooms", formData.bedrooms.toString());
+      formDataPayload.append("bathrooms", formData.bathrooms.toString());
+      
+      // Append amenities individually
+      formData.amenities.forEach((amenity) => {
+        formDataPayload.append("amenities", amenity);
+      });
+
+      // Convert and append photos
+      formData.photos.forEach((photoBase64, index) => {
+        const blob = dataURLtoBlob(photoBase64);
+        formDataPayload.append("photos", blob, `photo-${index}.jpg`);
+      });
+
+      formDataPayload.append("monthly_rent", formData.monthlyRent.toString());
+      formDataPayload.append("currency", formData.currency);
+      if (formData.deposit) {
+        formDataPayload.append("initial_deposit", formData.deposit.toString());
+      }
+      formDataPayload.append("negotiable", formData.negotiable ? "true" : "false");
+      formDataPayload.append("phone_number", formData.phoneNumber);
 
       // Post to backend API
-      const response = await api.post("/rent-listings/", payload);
+      const response = await api.post("/rent-listings/", formDataPayload, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       const createdListing = response.data;
 
       // Post to Telegram channel (non-blocking)
       try {
         const responseData = createdListing.data || createdListing;
+        
+        // Reconstruct simple object for Telegram service (since we can't spread FormData)
         const telegramPayload = {
-          ...payload,
+          property_type: formData.propertyType,
+          property_type_other: formData.customPropertyType || null,
+          description: formData.description,
+          location: formData.location,
+          bedrooms: formData.bedrooms,
+          bathrooms: formData.bathrooms,
+          amenities: formData.amenities,
+          monthly_rent: formData.monthlyRent.toString(),
+          currency: formData.currency,
+          initial_deposit: formData.deposit ? formData.deposit.toString() : null,
+          negotiable: formData.negotiable,
+          phone_number: formData.phoneNumber,
+          
           id: responseData.id,
           // Use backend URLs from the response
           photos: responseData.photos || [],
@@ -115,18 +160,31 @@ export default function ListingFormModal({
 
       onSuccess();
     } catch (err: any) {
-      let errorMessage = "Failed to create listing";
+      console.error("Submission Error:", err);
+      let errorMessage = "ንብረቱን መመዝገብ አልተቻለም"; // Failed to create listing
+      
       if (err.response?.data) {
         const errorData = err.response.data;
-        if (typeof errorData === "object") {
-          const errors = Object.entries(errorData)
-            .map(([field, msgs]) => {
-              const message = Array.isArray(msgs) ? msgs[0] : msgs;
-              return `${field}: ${message}`;
-            })
-            .join(", ");
-          if (errors) errorMessage = errors;
+        // Check if errorData is an object and not null
+        if (typeof errorData === "object" && errorData !== null) {
+          // If it's an array (e.g. non-field errors), join them
+          if (Array.isArray(errorData)) {
+             errorMessage = errorData.join(", ");
+          } else {
+             // It's an object of field errors
+             const errors = Object.entries(errorData)
+              .map(([field, msgs]) => {
+                const message = Array.isArray(msgs) ? msgs[0] : JSON.stringify(msgs);
+                return `${field}: ${message}`;
+              })
+              .join(", ");
+             if (errors) errorMessage = errors;
+          }
+        } else if (typeof errorData === "string") {
+            errorMessage = errorData;
         }
+      } else if (err.message) {
+          errorMessage = err.message;
       }
       setError(errorMessage);
     } finally {
@@ -154,10 +212,10 @@ export default function ListingFormModal({
             </button>
             <div>
               <h1 className="text-lg font-semibold text-foreground">
-                Post a Property
+                ንብረት ያስመዝግቡ
               </h1>
               <p className="text-sm text-muted-foreground">
-                Step {currentStep} of 4: {STEP_TITLES[currentStep - 1]}
+                ደረጃ {currentStep} ከ 4: {STEP_TITLES[currentStep - 1]}
               </p>
             </div>
           </div>
@@ -248,12 +306,12 @@ export default function ListingFormModal({
             className="flex items-center gap-2"
           >
             <ChevronLeft className="w-4 h-4" />
-            {currentStep === 1 ? "Cancel" : "Back"}
+            {currentStep === 1 ? "አቋርጥ" : "ተመለስ"}
           </Button>
 
           {currentStep < 4 ? (
             <Button onClick={handleNext} className="px-8">
-              Next
+              ቀጥል
             </Button>
           ) : (
             <Button
@@ -261,7 +319,7 @@ export default function ListingFormModal({
               disabled={isSubmitting}
               className="px-8"
             >
-              {isSubmitting ? "Posting..." : "Post Listing"}
+              {isSubmitting ? "እየተላከ ነው..." : "ንብረቱንለጥፍ"}
             </Button>
           )}
         </div>

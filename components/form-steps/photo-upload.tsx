@@ -87,9 +87,9 @@ export default function PhotoUploadForm({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Upload Photos</h2>
+        <h2 className="text-xl font-semibold">ፎቶዎችን ይስቀሉ</h2>
         <p className="text-sm text-muted-foreground">
-          Optional - Add multiple photos of your property
+          አማራጭ - የንብረቱን ፎቶዎች ይስቀሉ
         </p>
       </div>
 
@@ -126,9 +126,9 @@ export default function PhotoUploadForm({
         />
         <div>
           <Upload className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
-          <p className="text-foreground font-medium">Click to upload photos</p>
+          <p className="text-foreground font-medium">ፎቶዎችን ለመስቀል እዚህ ይጫኑ</p>
           <p className="text-sm text-muted-foreground">
-            JPG, PNG or GIF - Select multiple files
+            JPG, PNG ወይም GIF - ፋይሎችን ይምረጡ
           </p>
         </div>
       </div>
@@ -136,13 +136,13 @@ export default function PhotoUploadForm({
       {/* Suggestions */}
       <div className="bg-muted p-4 rounded-lg">
         <p className="font-medium text-sm text-foreground mb-2">
-          Tips for better engagement:
+          ለተሻለ ውጤት:
         </p>
         <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Add clear images of the kitchen and living room</li>
-          <li>• Properties with 5+ photos get 70% more inquiries</li>
-          <li>• Use well-lit, high-quality images</li>
-          <li>• Show different angles of the property</li>
+          <li>• ግልጽ የሆኑ የኩሽና እና ሳሎን ፎቶዎችን ያክሉ</li>
+          <li>• 5+ ፎቶዎች ያሏቸው ንብረቶች 70% የበለጠ ጥያቄዎችን ያገኛሉ</li>
+          <li>• በቂ ብርሃን ያላቸው እና ጥራት ያላቸው ፎቶዎችን ይጠቀሙ</li>
+          <li>• የንብረቱን የተለያዩ አቅጣጫዎች ያሳዩ</li>
         </ul>
       </div>
     </div>
