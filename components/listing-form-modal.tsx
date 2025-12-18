@@ -90,10 +90,8 @@ export default function ListingFormModal({
       formDataPayload.append("bedrooms", formData.bedrooms.toString());
       formDataPayload.append("bathrooms", formData.bathrooms.toString());
       
-      // Append amenities individually
-      formData.amenities.forEach((amenity) => {
-        formDataPayload.append("amenities", amenity);
-      });
+      // Append amenities as a JSON string
+      formDataPayload.append("amenities", JSON.stringify(formData.amenities));
 
       // Convert and append photos
       formData.photos.forEach((photoBase64, index) => {
@@ -319,7 +317,7 @@ export default function ListingFormModal({
               disabled={isSubmitting}
               className="px-8"
             >
-              {isSubmitting ? "እየተላከ ነው..." : "ንብረቱንለጥፍ"}
+              {isSubmitting ? "እየተላከ ነው..." : "ንብረቱን ለጥፍ"}
             </Button>
           )}
         </div>

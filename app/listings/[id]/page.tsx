@@ -33,7 +33,7 @@ import { Label } from "@/components/ui/label";
 import Footer from "@/components/footer";
 import api from "@/lib/axios";
 import dynamic from "next/dynamic";
-import { AMENITIES } from "@/lib/constants";
+import { AMENITIES, PROPERTY_TYPES } from "@/lib/constants";
 
 const Map = dynamic(() => import("@/components/Map"), {
   ssr: false,
@@ -137,6 +137,63 @@ export default function ListingDetailPage() {
     }
   };
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 1024;
+          const MAX_HEIGHT = 1024;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+          resolve(compressedBase64);
+        };
+      };
+    });
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && editForm) {
+      const newPhotos = [...(editForm.photos || [])];
+      for (let i = 0; i < files.length; i++) {
+        const base64 = await compressImage(files[i]);
+        newPhotos.push(base64);
+      }
+      setEditForm({ ...editForm, photos: newPhotos });
+    }
+  };
+
+  const removePhotoFromEdit = (index: number) => {
+    if (editForm) {
+      const newPhotos = editForm.photos.filter((_, i) => i !== index);
+      setEditForm({ ...editForm, photos: newPhotos });
+    }
+  };
+
   const handleSaveEdit = async () => {
     if (!editForm) return;
 
@@ -149,7 +206,7 @@ export default function ListingDetailPage() {
         location: editForm.location,
         bedrooms: editForm.bedrooms,
         bathrooms: editForm.bathrooms,
-        amenities: editForm.amenities,
+        amenities: JSON.stringify(editForm.amenities),
         photos: editForm.photos,
         monthly_rent: editForm.monthly_rent,
         currency: editForm.currency,
@@ -188,7 +245,8 @@ export default function ListingDetailPage() {
     listing.photos && listing.photos.length > 0
       ? listing.photos
       : ["/placeholder.svg"];
-  const propertyType = listing.property_type_other || listing.property_type;
+  const standardType = PROPERTY_TYPES.find(t => t.value === listing.property_type);
+  const propertyType = listing.property_type_other || (standardType ? standardType.amharic : listing.property_type);
   const monthlyRent = Number.parseInt(listing.monthly_rent);
   const hostName = listing.owner_details
     ? `${listing.owner_details.first_name} ${listing.owner_details.last_name}`
@@ -208,7 +266,7 @@ export default function ListingDetailPage() {
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground">
               <Share2 className="w-4 h-4" />
-              <span className="text-sm font-medium">አጋራ</span>
+              <span className="text-sm font-medium">Share</span>
             </button>
             <button
               onClick={() => setIsFavorite(!isFavorite)}
@@ -219,7 +277,7 @@ export default function ListingDetailPage() {
                   isFavorite ? "fill-current text-rose-500" : ""
                 }`}
               />
-              <span className="text-sm font-medium">አስቀምጥ</span>
+              <span className="text-sm font-medium">Save</span>
             </button>
             {isOwner && (
               <>
@@ -228,14 +286,14 @@ export default function ListingDetailPage() {
                   className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground"
                 >
                   <Edit2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">አስተካክል</span>
+                  <span className="text-sm font-medium">Edit</span>
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
                   className="flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
                 >
                   <Trash2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">ሰርዝ</span>
+                  <span className="text-sm font-medium">Delete</span>
                 </button>
               </>
             )}
@@ -497,6 +555,39 @@ export default function ListingDetailPage() {
           </DialogHeader>
           {editForm && (
             <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="property_type">የንብረት አይነት</Label>
+                  <select
+                    id="property_type"
+                    value={editForm.property_type}
+                    onChange={(e) =>
+                      setEditForm((prev) =>
+                        prev ? { ...prev, property_type: e.target.value, property_type_other: e.target.value === "other" ? prev.property_type_other : "" } : null
+                      )
+                    }
+                    className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {PROPERTY_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.amharic}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {editForm.property_type === "other" && (
+                  <div>
+                    <Label htmlFor="property_type_other">የንብረት አይነት ይግለጹ</Label>
+                    <Input
+                      id="property_type_other"
+                      value={editForm.property_type_other || ""}
+                      onChange={(e) =>
+                        setEditForm((prev) => (prev ? { ...prev, property_type_other: e.target.value } : null))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
               <div>
                 <Label htmlFor="description">መግለጫ</Label>
                 <Input
@@ -545,6 +636,31 @@ export default function ListingDetailPage() {
                   />
                 </div>
               </div>
+              <div>
+                <Label>ተጨማሪዎች (Amenities)</Label>
+                <div className="grid grid-cols-2 gap-2 border rounded-md p-3">
+                  {AMENITIES.map((amenity) => (
+                    <div key={amenity.value} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`edit-amenity-${amenity.value}`}
+                        checked={(editForm.amenities || []).includes(amenity.value)}
+                        onChange={(e) => {
+                          const current = editForm.amenities || [];
+                          const updated = e.target.checked
+                            ? [...current, amenity.value]
+                            : current.filter((a) => a !== amenity.value);
+                          setEditForm((prev) => (prev ? { ...prev, amenities: updated } : null));
+                        }}
+                        className="rounded border-gray-300 text-primary focus:ring-primary"
+                      />
+                      <Label htmlFor={`edit-amenity-${amenity.value}`} className="text-sm font-normal cursor-pointer">
+                        {amenity.amharic}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="monthly_rent">ወርሃዊ ኪራይ</Label>
@@ -558,13 +674,76 @@ export default function ListingDetailPage() {
                 </div>
                 <div>
                   <Label htmlFor="currency">ምንዛሬ</Label>
-                  <Input
+                  <select
                     id="currency"
                     value={editForm.currency}
                     onChange={(e) =>
                       setEditForm((prev) => (prev ? { ...prev, currency: e.target.value } : null))
                     }
-                  />
+                    className="w-full flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {["USD", "EUR", "GBP", "ETB", "KES", "UGX"].map((curr) => (
+                      <option key={curr} value={curr}>
+                        {curr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="initial_deposit">የመጀመሪያ ቅድመ ክፍያ (Initial Deposit)</Label>
+                <Input
+                  id="initial_deposit"
+                  value={editForm.initial_deposit || ""}
+                  onChange={(e) =>
+                    setEditForm((prev) => (prev ? { ...prev, initial_deposit: e.target.value } : null))
+                  }
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="edit-negotiable"
+                  checked={editForm.negotiable}
+                  onChange={(e) =>
+                    setEditForm((prev) => (prev ? { ...prev, negotiable: e.target.checked } : null))
+                  }
+                  className="rounded border-gray-300 text-primary focus:ring-primary"
+                />
+                <Label htmlFor="edit-negotiable" className="text-sm font-normal cursor-pointer">
+                  ድርድር አለው
+                </Label>
+              </div>
+              <div>
+                <Label>ፎቶዎች</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  {(editForm.photos || []).map((photo, index) => (
+                    <div key={index} className="relative group aspect-square">
+                      <img
+                        src={photo}
+                        alt={`Preview ${index}`}
+                        className="w-full h-full object-cover rounded-md"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePhotoFromEdit(index)}
+                        className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="border-2 border-dashed border-muted rounded-md flex flex-col items-center justify-center cursor-pointer hover:border-primary transition-colors aspect-square">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handlePhotoUpload}
+                    />
+                    <Grid3x3 className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground mt-1">ፎቶ ይጨምሩ</span>
+                  </label>
                 </div>
               </div>
               <div>

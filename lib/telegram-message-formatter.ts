@@ -17,7 +17,7 @@ interface ListingData {
   phone_number: string;
 }
 
-import { AMENITIES } from "@/lib/constants";
+import { AMENITIES, PROPERTY_TYPES } from "@/lib/constants";
 
 const AMENITY_EMOJIS: Record<string, string> = {
   water: "💧",
@@ -38,7 +38,8 @@ export class TelegramMessageFormatter {
    * Format listing data into a Telegram message
    */
   static formatListingMessage(listing: ListingData): string {
-    const propertyType = listing.property_type_other || listing.property_type;
+    const standardType = PROPERTY_TYPES.find(t => t.value === listing.property_type);
+    const propertyType = listing.property_type_other || (standardType ? standardType.amharic : listing.property_type);
     const monthlyRent = Number.parseInt(listing.monthly_rent);
     
     // Build the message
@@ -145,6 +146,6 @@ export class TelegramMessageFormatter {
       return this.formatListingMessage(listing);
     }
     // Other photos get minimal caption
-    return `Photo ${photoIndex + 1}/${totalPhotos}`;
+    return `ፎቶ ${photoIndex + 1}/${totalPhotos}`;
   }
 }

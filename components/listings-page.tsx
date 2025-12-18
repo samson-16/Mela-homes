@@ -91,6 +91,8 @@ interface BackendListing {
 //   },
 // ];
 
+import { PROPERTY_TYPES } from "@/lib/constants";
+
 const transformBackendListing = (backendListing: BackendListing): Listing => {
   // Handle photos safely (legacy string[] vs potential object structure)
   let imageUrl = "https://placehold.co/600x400?text=No+Image";
@@ -103,19 +105,21 @@ const transformBackendListing = (backendListing: BackendListing): Listing => {
     }
   }
 
+  const standardType = PROPERTY_TYPES.find(t => t.value === backendListing.property_type);
+  const propertyTypeName = backendListing.property_type_other || (standardType ? standardType.amharic : backendListing.property_type);
+
   return {
     id: backendListing.id,
     title:
       backendListing.description ||
-      `${backendListing.property_type} in ${backendListing.location}`,
+      `${propertyTypeName} በ ${backendListing.location}`,
     image: imageUrl,
     price: Number.parseInt(backendListing.monthly_rent),
     currency: backendListing.currency,
     bedrooms: backendListing.bedrooms,
     bathrooms: backendListing.bathrooms,
     location: backendListing.location,
-    propertyType:
-      backendListing.property_type_other || backendListing.property_type,
+    propertyType: propertyTypeName,
   };
 };
 

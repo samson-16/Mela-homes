@@ -19,7 +19,9 @@ const icon = L.icon({
 // Component to recenter map when coordinates change
 function ChangeView({ center }: { center: [number, number] }) {
   const map = useMap();
-  map.setView(center);
+  useEffect(() => {
+    map.setView(center);
+  }, [map, center]);
   return null;
 }
 
@@ -36,6 +38,7 @@ export default function Map({ location }: MapProps) {
   const displayPosition = coordinates || fallbackPosition;
 
   useEffect(() => {
+    let isMounted = true;
     const fetchCoordinates = async () => {
       try {
         setLoading(true);
@@ -47,7 +50,7 @@ export default function Map({ location }: MapProps) {
         );
         const data = await response.json();
 
-        if (data && data.length > 0) {
+        if (isMounted && data && data.length > 0) {
           const lat = Number.parseFloat(data[0].lat);
           const lon = Number.parseFloat(data[0].lon);
           setCoordinates([lat, lon]);
@@ -55,13 +58,17 @@ export default function Map({ location }: MapProps) {
       } catch (error) {
         console.error("Error fetching coordinates:", error);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     if (location) {
       fetchCoordinates();
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [location]);
 
   return (
