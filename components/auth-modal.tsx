@@ -96,10 +96,10 @@ export default function AuthModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Welcome to Mela Homes</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[380px] p-4 sm:p-6">
+        <DialogHeader className="text-left">
+          <DialogTitle className="text-xl">Welcome to Mela Homes</DialogTitle>
+          <DialogDescription className="text-sm">
             Login or create an account to post listings.
           </DialogDescription>
         </DialogHeader>

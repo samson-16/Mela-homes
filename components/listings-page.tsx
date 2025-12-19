@@ -135,6 +135,7 @@ export default function ListingsPage() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authReason, setAuthReason] = useState<"login" | "post" | null>(null);
 
   // Handle Telegram Mini App Deep Linking
   useEffect(() => {
@@ -167,6 +168,7 @@ export default function ListingsPage() {
               if (token) {
                 setShowFormModal(true);
               } else {
+                setAuthReason("post");
                 setShowAuthModal(true);
               }
             }, 100);
@@ -233,10 +235,28 @@ export default function ListingsPage() {
 
   const handlePostClick = () => {
     if (!token) {
+      setAuthReason("post");
       setShowAuthModal(true);
       return;
     }
     setShowFormModal(true);
+  };
+
+  const handleAuthClose = () => {
+    if (authReason === "post" && !token) {
+      // If user clicked X while trying to post but not logged in,
+      // keep/reopen the modal as requested.
+      return;
+    }
+    
+    setShowAuthModal(false);
+    
+    // If they just logged in and the reason was post, show the form
+    if (authReason === "post" && token) {
+      setShowFormModal(true);
+    }
+    
+    setAuthReason(null);
   };
 
   return (
@@ -351,7 +371,7 @@ export default function ListingsPage() {
 
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
+        onClose={handleAuthClose}
         defaultTab="login"
       />
 
