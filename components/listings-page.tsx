@@ -127,7 +127,7 @@ const transformBackendListing = (backendListing: BackendListing): Listing => {
 
 export default function ListingsPage() {
   const router = useRouter();
-  const { user, token, logout } = useAuth();
+  const { user, token, logout, isLoading: authLoading } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -136,47 +136,45 @@ export default function ListingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [authReason, setAuthReason] = useState<"login" | "post" | null>(null);
+  const [isProcessingDeepLink, setIsProcessingDeepLink] = useState(false);
 
   // Handle Telegram Mini App Deep Linking
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Check for start_param in initData
-      const webApp = (window as any).Telegram?.WebApp;
-      let startParam = webApp?.initDataUnsafe?.start_param;
+    if (typeof window === "undefined" || authLoading || isProcessingDeepLink) return;
 
-      // Fallback: Check URL search params (tgWebAppStartParam)
-      if (!startParam) {
-        const urlParams = new URLSearchParams(window.location.search);
-        startParam = urlParams.get("tgWebAppStartParam");
-      }
+    // Check for start_param in initData
+    const webApp = (window as any).Telegram?.WebApp;
+    let startParam = webApp?.initDataUnsafe?.start_param;
 
-      if (startParam) {
-        console.log("Telegram Deep Link detected:", startParam);
-        
-        // Add a small delay to ensure router is ready
-        setTimeout(() => {
-          if (startParam.startsWith("listing-")) {
-            const id = startParam.replace("listing-", "");
-            router.push(`/listings/${id}`);
-          } else if (startParam.startsWith("contact-")) {
-            const id = startParam.replace("contact-", "");
-            router.push(`/listings/${id}/contact`);
-          } else if (startParam === "create-listing") {
-            // Handle "Post Listing" deep link
-            // Using a slight delay to ensure Auth context is ready
-            setTimeout(() => {
-              if (token) {
-                setShowFormModal(true);
-              } else {
-                setAuthReason("post");
-                setShowAuthModal(true);
-              }
-            }, 100);
-          }
-        }, 100);
-      }
+    // Fallback: Check URL search params (tgWebAppStartParam)
+    if (!startParam) {
+      const urlParams = new URLSearchParams(window.location.search);
+      startParam = urlParams.get("tgWebAppStartParam");
     }
-  }, [router, token]);
+
+    if (startParam) {
+      console.log("Telegram Deep Link detected:", startParam);
+      setIsProcessingDeepLink(true);
+      
+      // Add a small delay to ensure router is ready
+      setTimeout(() => {
+        if (startParam.startsWith("listing-")) {
+          const id = startParam.replace("listing-", "");
+          router.push(`/listings/${id}`);
+        } else if (startParam.startsWith("contact-")) {
+          const id = startParam.replace("contact-", "");
+          router.push(`/listings/${id}/contact`);
+        } else if (startParam === "create-listing") {
+          if (token) {
+            setShowFormModal(true);
+          } else {
+            setAuthReason("post");
+            setShowAuthModal(true);
+          }
+        }
+      }, 200);
+    }
+  }, [router, token, authLoading, isProcessingDeepLink]);
 
   useEffect(() => {
     fetchListings();
@@ -242,21 +240,23 @@ export default function ListingsPage() {
     setShowFormModal(true);
   };
 
-  const handleAuthClose = () => {
-    if (authReason === "post" && !token) {
-      // If user clicked X while trying to post but not logged in,
-      // keep/reopen the modal as requested.
+  const handleAuthClose = (open: boolean) => {
+    if (!open && authReason === "post" && !token) {
+      // If user tried to close while trying to post but not logged in,
+      // keep the modal open.
       return;
     }
     
-    setShowAuthModal(false);
-    
-    // If they just logged in and the reason was post, show the form
-    if (authReason === "post" && token) {
-      setShowFormModal(true);
+    if (!open) {
+      setShowAuthModal(false);
+      
+      // If they just logged in (token is present) and the reason was post, show the form
+      if (authReason === "post" && token) {
+        setShowFormModal(true);
+      }
+      
+      setAuthReason(null);
     }
-    
-    setAuthReason(null);
   };
 
   return (
@@ -361,7 +361,7 @@ export default function ListingsPage() {
         )}
       </main>
 
-      {showFormModal && (
+      {showFormModal && token && (
         <ListingFormModal
           isOpen={showFormModal}
           onClose={() => setShowFormModal(false)}
@@ -371,7 +371,7 @@ export default function ListingsPage() {
 
       <AuthModal
         isOpen={showAuthModal}
-        onClose={handleAuthClose}
+        onOpenChange={handleAuthClose}
         defaultTab="login"
       />
 

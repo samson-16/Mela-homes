@@ -23,12 +23,7 @@ export default function Footer() {
               >
                 <FaFacebook className="w-5 h-5" />
               </a>
-              <a
-                href="#"
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <FaTwitter className="w-5 h-5" />
-              </a>
+              
               <a
                 href="#"
                 className="text-gray-400 hover:text-white transition-colors"
@@ -162,7 +157,7 @@ export default function Footer() {
         <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
             © 2024 Mela Homes. All rights reserved.
-          </p>
+        </p>
           
         </div>
       </div>

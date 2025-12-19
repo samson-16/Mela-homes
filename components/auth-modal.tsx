@@ -33,13 +33,13 @@ const registerSchema = z.object({
 
 interface AuthModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onOpenChange: (open: boolean) => void;
   defaultTab?: "login" | "register";
 }
 
 export default function AuthModal({
   isOpen,
-  onClose,
+  onOpenChange,
   defaultTab = "login",
 }: AuthModalProps) {
   const { login, signup } = useAuth();
@@ -69,7 +69,7 @@ export default function AuthModal({
     try {
       setError(null);
       await login(data.email, data.password);
-      onClose();
+      onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to login");
     }
@@ -95,7 +95,7 @@ export default function AuthModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px] w-[95vw] max-w-[380px] p-4 sm:p-6">
         <DialogHeader className="text-left">
           <DialogTitle className="text-xl">Welcome to Mela Homes</DialogTitle>
