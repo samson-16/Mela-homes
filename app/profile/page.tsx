@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTelegram } from "@/lib/telegram-provider";
 import Footer from "@/components/footer";
 import api from "@/lib/axios";
 
@@ -45,6 +46,23 @@ export default function ProfilePage() {
   );
   const [isDeleting, setIsDeleting] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const { isMiniApp: isTelegram, webApp } = useTelegram();
+
+  // Telegram BackButton logic
+  useEffect(() => {
+    if (isTelegram && webApp?.BackButton) {
+      webApp.BackButton.show();
+      const handleBack = () => {
+        router.push("/");
+      };
+      webApp.BackButton.onClick(handleBack);
+      
+      return () => {
+        webApp.BackButton.hide();
+        webApp.BackButton.offClick(handleBack);
+      };
+    }
+  }, [isTelegram, webApp, router]);
 
   useEffect(() => {
     if (!isLoading && !token) {

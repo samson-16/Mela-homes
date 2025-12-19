@@ -20,7 +20,6 @@ import ListingCard from "./listing-card";
 import ListingFormModal from "./listing-form-modal";
 import AuthModal from "./auth-modal";
 import Footer from "./footer";
-import SidebarMenu from "./sidebar-menu";
 import { ListingSkeletonGrid } from "./listing-skeleton";
 import { useTelegram } from "@/lib/telegram-provider";
 import api from "@/lib/axios";
@@ -229,8 +228,6 @@ export default function ListingsPage() {
     fetchListings();
   };
 
-  const { isMiniApp: isTelegram } = useTelegram();
-
   const handlePostClick = () => {
     if (!token) {
       setAuthReason("post");
@@ -266,58 +263,52 @@ export default function ListingsPage() {
           <h1 className="text-2xl font-bold text-foreground">
             Mela Homes
           </h1>
-          <div className="flex items-center gap-2">
-            {isTelegram ? (
-              <SidebarMenu onPostListing={handlePostClick} />
+          <div className="flex items-center gap-4">
+            {!token ? (
+              <Button onClick={() => setShowAuthModal(true)}>Login</Button>
             ) : (
-              <div className="flex items-center gap-4">
-                {!token ? (
-                  <Button onClick={() => setShowAuthModal(true)}>Login</Button>
-                ) : (
-                  <>
-                    <Button
-                      onClick={handlePostClick}
-                      className="hidden sm:flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Post a Listing
+              <>
+                <Button
+                  onClick={handlePostClick}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Post a Listing</span>
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user?.avatar || ""} alt={user?.username || "User"} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(user?.username || "U").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
                     </Button>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-                          <Avatar className="h-9 w-9">
-                            <AvatarImage src={user?.avatar || ""} alt={user?.username || "User"} />
-                            <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                              {(user?.username || "U").charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="w-56" align="end" forceMount>
-                        <DropdownMenuLabel className="font-normal">
-                          <div className="flex flex-col space-y-1">
-                            <p className="text-sm font-medium leading-none">
-                              {user?.username || "User"}
-                            </p>
-                            <p className="text-xs leading-none text-muted-foreground">
-                              {user?.email || ""}
-                            </p>
-                          </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => router.push("/profile")}>
-                          <User className="mr-2 h-4 w-4" />
-                          <span>Go to Profile</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={logout}>
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>Sign out</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </>
-                )}
-              </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user?.username || "User"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user?.email || ""}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push("/profile")}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Go to Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={logout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Sign out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             )}
           </div>
         </div>

@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { Phone, Mail, MessageCircle, X, CheckCircle, ChevronLeft } from "lucide-react";
 import { ContactPageSkeleton } from "@/components/listing-skeleton";
 import { Button } from "@/components/ui/button";
-import SidebarMenu from "@/components/sidebar-menu";
 import { useTelegram } from "@/lib/telegram-provider";
 import api from "@/lib/axios";
 
@@ -26,10 +25,26 @@ interface ListingContact {
 export default function ContactPage() {
   const params = useParams();
   const router = useRouter();
-  const { isMiniApp: isTelegram } = useTelegram();
+  const { isMiniApp: isTelegram, webApp } = useTelegram();
   const [listing, setListing] = useState<ListingContact | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+
+  // Telegram BackButton logic
+  useEffect(() => {
+    if (isTelegram && webApp?.BackButton) {
+      webApp.BackButton.show();
+      const handleBack = () => {
+        router.back();
+      };
+      webApp.BackButton.onClick(handleBack);
+      
+      return () => {
+        webApp.BackButton.hide();
+        webApp.BackButton.offClick(handleBack);
+      };
+    }
+  }, [isTelegram, webApp, router]);
 
   const listingId = params.id;
 
@@ -109,7 +124,6 @@ export default function ContactPage() {
             </button>
             <h1 className="text-lg font-bold text-foreground">Mela Homes</h1>
           </div>
-          {isTelegram && <SidebarMenu />}
         </div>
       </header>
 

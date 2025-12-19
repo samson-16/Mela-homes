@@ -17,7 +17,6 @@ import {
   Edit2,
   Trash2,
 } from "lucide-react";
-import SidebarMenu from "@/components/sidebar-menu";
 import { useTelegram } from "@/lib/telegram-provider";
 import { ListingDetailSkeleton } from "@/components/listing-skeleton";
 import { Button } from "@/components/ui/button";
@@ -91,7 +90,23 @@ export default function ListingDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const { isMiniApp: isTelegram } = useTelegram();
+  const { isMiniApp: isTelegram, webApp } = useTelegram();
+
+  // Telegram BackButton logic
+  useEffect(() => {
+    if (isTelegram && webApp?.BackButton) {
+      webApp.BackButton.show();
+      const handleBack = () => {
+        router.push("/");
+      };
+      webApp.BackButton.onClick(handleBack);
+      
+      return () => {
+        webApp.BackButton.hide();
+        webApp.BackButton.offClick(handleBack);
+      };
+    }
+  }, [isTelegram, webApp, router]);
 
   const [editForm, setEditForm] = useState<ListingDetail | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -291,7 +306,6 @@ export default function ListingDetailPage() {
                 </button>
               </>
             )}
-            {isTelegram && <SidebarMenu />}
           </div>
         </div>
       </header>
