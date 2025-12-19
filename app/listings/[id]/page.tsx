@@ -12,13 +12,13 @@ import {
   Droplet,
   Lock,
   Zap,
-  Heart,
-  Share2,
   Grid3x3,
   MessageCircle,
   Edit2,
   Trash2,
 } from "lucide-react";
+import SidebarMenu from "@/components/sidebar-menu";
+import { useTelegram } from "@/lib/telegram-provider";
 import { ListingDetailSkeleton } from "@/components/listing-skeleton";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -88,10 +88,11 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const { isMiniApp: isTelegram } = useTelegram();
+
   const [editForm, setEditForm] = useState<ListingDetail | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -256,47 +257,41 @@ export default function ListingDetailPage() {
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 bg-white border-b border-border">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => router.push("/")}
-            className="p-2 hover:bg-muted rounded-lg transition-colors"
-            aria-label="Go back"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground">
-              <Share2 className="w-4 h-4" />
-              <span className="text-sm font-medium">Share</span>
-            </button>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsFavorite(!isFavorite)}
-              className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors"
+              onClick={() => router.push("/")}
+              className="p-2 hover:bg-muted rounded-lg transition-colors"
+              aria-label="Go back"
             >
-              <Heart
-                className={`w-4 h-4 ${
-                  isFavorite ? "fill-current text-rose-500" : ""
-                }`}
-              />
-              <span className="text-sm font-medium">Save</span>
+              <ChevronLeft className="w-6 h-6" />
             </button>
+            <h1 
+              className="text-xl font-bold cursor-pointer" 
+              onClick={() => router.push("/")}
+            >
+              Mela Homes
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
             {isOwner && (
               <>
                 <button
                   onClick={handleEdit}
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-muted rounded-lg transition-colors text-foreground"
+                  className="p-2 hover:bg-muted rounded-lg transition-colors text-foreground"
+                  title="Edit"
                 >
-                  <Edit2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Edit</span>
+                  <Edit2 className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="flex items-center gap-2 px-4 py-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                  className="p-2 hover:bg-red-50 rounded-lg transition-colors text-red-600"
+                  title="Delete"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  <span className="text-sm font-medium">Delete</span>
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </>
             )}
+            {isTelegram && <SidebarMenu />}
           </div>
         </div>
       </header>

@@ -193,65 +193,26 @@ export class TelegramService {
       console.log(`Processing ${photos.length} photos, ${validPhotos.length} valid for Telegram`);
 
       if (validPhotos.length > 0) {
-        // If there are photos, send as media group with caption on first photo
-        if (validPhotos.length === 1) {
-          // Single photo
-          const result = await this.sendPhoto({
-            chat_id: this.channelId,
-            photo: validPhotos[0],
-            caption: message,
-            parse_mode: "HTML",
-            reply_markup: replyMarkup,
-          });
+        // Always send as a single photo to allow attaching buttons (reply_markup)
+        // If there are multiple photos, we only send the first one as per user request
+        const result = await this.sendPhoto({
+          chat_id: this.channelId,
+          photo: validPhotos[0],
+          caption: message,
+          parse_mode: "HTML",
+          reply_markup: replyMarkup,
+        });
 
-          if (result.ok && result.result) {
-            return {
-              success: true,
-              messageId: result.result.message_id,
-            };
-          } else {
-            return {
-              success: false,
-              error: result.description || "Failed to send photo",
-            };
-          }
+        if (result.ok && result.result) {
+          return {
+            success: true,
+            messageId: result.result.message_id,
+          };
         } else {
-          // Multiple photos - send as media group
-          const media: TelegramInputMedia[] = validPhotos.slice(0, 10).map((photo, index) => ({
-            type: "photo" as const,
-            media: photo,
-            ...(index === 0 && {
-              caption: message,
-              parse_mode: "HTML" as const,
-            }),
-          }));
-
-          const mediaResult = await this.sendMediaGroup({
-            chat_id: this.channelId,
-            media,
-          });
-
-          // Send a follow-up message with the keyboard buttons
-          // (media groups don't support inline keyboards)
-          if (mediaResult.ok && replyMarkup) {
-            await this.sendMessage({
-              chat_id: this.channelId,
-              text: "👆 Interested in this property?",
-              reply_markup: replyMarkup,
-            });
-          }
-
-          if (mediaResult.ok && mediaResult.result && mediaResult.result.length > 0) {
-            return {
-              success: true,
-              messageId: mediaResult.result[0].message_id,
-            };
-          } else {
-            return {
-              success: false,
-              error: mediaResult.description || "Failed to send media group",
-            };
-          }
+          return {
+            success: false,
+            error: result.description || "Failed to send photo",
+          };
         }
       } else {
         // No valid photos, send text message only

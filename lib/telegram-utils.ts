@@ -9,7 +9,15 @@ export function isTelegramMiniApp(): boolean {
   if (typeof window === "undefined") return false;
   
   // Check for Telegram WebApp object
-  return !!(window as any).Telegram?.WebApp;
+  const webApp = (window as any).Telegram?.WebApp;
+  if (!webApp) return false;
+
+  // platform is 'unknown' in standard browsers or when not initialized
+  // initData is empty in standard browsers
+  const isPlatformValid = webApp.platform && webApp.platform !== 'unknown';
+  const hasInitData = !!webApp.initData;
+
+  return !!(isPlatformValid || hasInitData);
 }
 
 /**
